@@ -1,0 +1,12 @@
+{
+  "name": "@myapp/contract",
+  "version": "0.0.1",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@effect/platform": "latest",
+    "effect": "latest"
+  }
+}

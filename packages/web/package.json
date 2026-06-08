@@ -1,0 +1,10 @@
+{
+  "name": "@myapp/web",
+  "version": "0.0.1",
+  "type": "module",
+  "dependencies": {
+    "@effect/platform": "latest",
+    "@myapp/contract": "workspace:*",
+    "effect": "latest"
+  }
+}

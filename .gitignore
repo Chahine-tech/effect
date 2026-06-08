@@ -1,0 +1,16 @@
+# env
+.env
+.env.*
+!.env.example
+
+# deps
+node_modules/
+
+# build
+dist/
+
+# drizzle generated migrations (garder ou supprimer selon préférence)
+# drizzle/
+
+# system
+.DS_Store

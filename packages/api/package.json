@@ -1,0 +1,34 @@
+{
+  "name": "@myapp/api",
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "node --env-file .env --import tsx/esm --watch src/interface/server.ts",
+    "start": "node --env-file .env --import tsx/esm src/interface/server.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate"
+  },
+  "dependencies": {
+    "@effect/experimental": "^0.60.0",
+    "@effect/platform": "^0.96.1",
+    "@effect/platform-node": "^0.107.0",
+    "@effect/sql": "^0.51.1",
+    "@effect/sql-pg": "^0.52.1",
+    "@myapp/contract": "workspace:*",
+    "argon2": "^0.44.0",
+    "drizzle-orm": "^0.45.2",
+    "effect": "^3.21.3",
+    "pg": "^8.21.0"
+  },
+  "devDependencies": {
+    "@effect/vitest": "^0.29.0",
+    "@types/node": "^22.0.0",
+    "@types/pg": "^8.11.0",
+    "drizzle-kit": "^0.31.10",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.8"
+  }
+}
