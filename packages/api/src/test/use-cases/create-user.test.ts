@@ -2,12 +2,14 @@ import { describe, expect } from "vitest"
 import { it } from "@effect/vitest"
 import { Effect, Layer } from "effect"
 import { CreateUserUseCase, CreateUserUseCaseLive } from "../../application/users/create-user.js"
+import { UserEventBusLive } from "../../infrastructure/events.js"
 import { FakePasswordService } from "../helpers/fake-password.service.js"
 import { makeInMemoryUserRepo } from "../helpers/in-memory-user.repo.js"
 
 const TestLayer = CreateUserUseCaseLive.pipe(
   Layer.provide(makeInMemoryUserRepo()),
-  Layer.provide(FakePasswordService)
+  Layer.provide(FakePasswordService),
+  Layer.provide(UserEventBusLive)
 )
 
 describe("CreateUserUseCase", () => {

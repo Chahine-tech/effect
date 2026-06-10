@@ -1,5 +1,5 @@
 import { HttpServerRequest } from "@effect/platform"
-import { Context, Effect, Layer, Ref } from "effect"
+import { Clock, Context, Effect, Layer, Ref } from "effect"
 import { TooManyRequests } from "@myapp/contract"
 
 interface IpEntry {
@@ -25,7 +25,7 @@ export const RateLimiterLive = Layer.effect(
             req.headers["x-forwarded-for"]?.toString().split(",")[0]?.trim() ??
             req.headers["x-real-ip"]?.toString() ??
             "unknown"
-          const now = Date.now()
+          const now = yield* Clock.currentTimeMillis
 
           yield* Ref.update(store, (map) => {
             const next = new Map(map)

@@ -19,5 +19,6 @@ export class UserRepository extends Context.Tag("UserRepository")<
     create: (input: CreateUserInput) => Effect.Effect<User, Conflict | InternalError>
     remove: (id: number) => Effect.Effect<void, NotFound | InternalError>
     list: () => Effect.Effect<ReadonlyArray<User>, InternalError>
+    findManyByIds: (ids: ReadonlyArray<number>) => Effect.Effect<ReadonlyArray<User>, InternalError>
   }
 >() {}

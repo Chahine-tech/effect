@@ -1,4 +1,4 @@
-import { Context, Effect, Layer } from "effect"
+import { Cache, Context, Duration, Effect, Layer } from "effect"
 import type { InternalError, NotFound, User } from "@myapp/contract"
 import { UserRepository } from "../../domain/user.js"
 
@@ -7,10 +7,16 @@ export class GetUserUseCase extends Context.Tag("GetUserUseCase")<
   (id: number) => Effect.Effect<User, NotFound | InternalError>
 >() {}
 
-export const GetUserUseCaseLive = Layer.effect(
+export const GetUserUseCaseLive = Layer.scoped(
   GetUserUseCase,
   Effect.gen(function* () {
     const userRepo = yield* UserRepository
-    return (id) => userRepo.findById(id).pipe(Effect.withSpan("GetUserUseCase", { attributes: { id } }))
+    const cache = yield* Cache.make({
+      capacity: 1000,
+      timeToLive: Duration.minutes(5),
+      lookup: (id: number) => userRepo.findById(id),
+    })
+    return (id) =>
+      cache.get(id).pipe(Effect.withSpan("GetUserUseCase", { attributes: { id } }))
   })
 )

@@ -7,6 +7,8 @@
     "start": "pnpm --filter @myapp/api start",
     "db:generate": "pnpm --filter @myapp/api db:generate",
     "db:migrate": "pnpm --filter @myapp/api db:migrate",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm --filter @myapp/api test",
     "lint": "oxlint --node-plugin packages",
     "lint:fix": "oxlint --fix --node-plugin packages"
   },

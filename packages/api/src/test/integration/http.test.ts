@@ -13,15 +13,17 @@ import { RemoveUserUseCaseLive } from "../../application/users/remove-user.js"
 
 import { AuthHandlerLive } from "../../interface/handlers/auth.handler.js"
 import { HealthHandlerLive } from "../../interface/handlers/health.handler.js"
+import { MetricsHandlerLive } from "../../interface/handlers/metrics.handler.js"
 import { UsersHandlerLive } from "../../interface/handlers/users.handler.js"
 import { AuthenticationLive } from "../../interface/middleware/auth.middleware.js"
 import { RateLimiterLive } from "../../interface/middleware/rate-limit.middleware.js"
 
+import { UserEventBusLive } from "../../infrastructure/events.js"
 import { FakePasswordService } from "../helpers/fake-password.service.js"
 import { InMemorySessionRepo } from "../helpers/in-memory-session.repo.js"
 import { makeInMemoryUserRepo } from "../helpers/in-memory-user.repo.js"
 
-const TestInfraLive = Layer.mergeAll(makeInMemoryUserRepo(), InMemorySessionRepo, FakePasswordService)
+const TestInfraLive = Layer.mergeAll(makeInMemoryUserRepo(), InMemorySessionRepo, FakePasswordService, UserEventBusLive)
 
 const TestUseCasesLive = Layer.mergeAll(
   LoginUseCaseLive,
@@ -33,7 +35,7 @@ const TestUseCasesLive = Layer.mergeAll(
 )
 
 const TestApiLive = HttpApiBuilder.api(MyApi).pipe(
-  Layer.provide([HealthHandlerLive, UsersHandlerLive, AuthHandlerLive]),
+  Layer.provide([HealthHandlerLive, UsersHandlerLive, AuthHandlerLive, MetricsHandlerLive]),
   Layer.provide(AuthenticationLive),
   Layer.provide(TestUseCasesLive),
   Layer.provide(TestInfraLive),

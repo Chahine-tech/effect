@@ -19,7 +19,8 @@
     "typescript/no-unused-vars": "error",
 
     "import/no-duplicates": "error",
-    "import/no-self-import": "error"
+    "import/no-self-import": "error",
+    "import/namespace": "off"
   },
   "overrides": [
     {

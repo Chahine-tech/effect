@@ -16,10 +16,12 @@ import { AppConfig, AppConfigLive } from "../infrastructure/config.js"
 import { DbLive } from "../infrastructure/db/db.js"
 import { SessionRepositoryLive } from "../infrastructure/db/session.repo.js"
 import { UserRepositoryLive } from "../infrastructure/db/user.repo.js"
+import { EventWorkerLive, UserEventBusLive } from "../infrastructure/events.js"
 import { PasswordServiceLive } from "../infrastructure/password.js"
 
 import { AuthHandlerLive } from "./handlers/auth.handler.js"
 import { HealthHandlerLive } from "./handlers/health.handler.js"
+import { MetricsHandlerLive } from "./handlers/metrics.handler.js"
 import { UsersHandlerLive } from "./handlers/users.handler.js"
 import { AuthenticationLive } from "./middleware/auth.middleware.js"
 import { RateLimiterLive } from "./middleware/rate-limit.middleware.js"
@@ -29,7 +31,7 @@ const RepositoriesLive = Layer.mergeAll(UserRepositoryLive, SessionRepositoryLiv
   Layer.provide(AppConfigLive)
 )
 
-const InfraLive = Layer.mergeAll(RepositoriesLive, PasswordServiceLive)
+const InfraLive = Layer.mergeAll(RepositoriesLive, PasswordServiceLive, UserEventBusLive)
 
 const UseCasesLive = Layer.mergeAll(
   LoginUseCaseLive,
@@ -41,7 +43,7 @@ const UseCasesLive = Layer.mergeAll(
 )
 
 const ApiLive = HttpApiBuilder.api(MyApi).pipe(
-  Layer.provide([HealthHandlerLive, UsersHandlerLive, AuthHandlerLive]),
+  Layer.provide([HealthHandlerLive, UsersHandlerLive, AuthHandlerLive, MetricsHandlerLive]),
   Layer.provide(AuthenticationLive),
   Layer.provide(UseCasesLive),
   Layer.provide(InfraLive),
@@ -60,6 +62,8 @@ HttpApiBuilder.serve(HttpMiddleware.logger).pipe(
   Layer.provide(HttpApiBuilder.middlewareOpenApi()),
   Layer.provide(HttpApiBuilder.middlewareCors()),
   Layer.provide(ApiLive),
+  Layer.provide(EventWorkerLive),
+  Layer.provide(UserEventBusLive),
   HttpServer.withLogAddress,
   Layer.provide(ServerLive),
   Layer.provide(DevTools.layer()),

@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm"
+import { eq, inArray } from "drizzle-orm"
 import { Effect, Layer } from "effect"
 import { Conflict, InternalError, NotFound, User } from "@myapp/contract"
 import { UserRepository, type CreateUserInput } from "../../domain/user.js"
@@ -84,6 +84,14 @@ export const UserRepositoryLive = Layer.effect(
           try: () => db.select().from(users),
           catch: (e) => new InternalError({ message: String(e) }),
         }).pipe(Effect.map((rows) => rows.map(toUser))),
+
+      findManyByIds: (ids) => {
+        if (ids.length === 0) return Effect.succeed([])
+        return Effect.tryPromise({
+          try: () => db.select().from(users).where(inArray(users.id, Array.from(ids))),
+          catch: (e) => new InternalError({ message: String(e) }),
+        }).pipe(Effect.map((rows) => rows.map(toUser)))
+      },
     }
   })
 )

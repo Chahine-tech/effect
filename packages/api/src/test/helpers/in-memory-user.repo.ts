@@ -65,6 +65,11 @@ export const makeInMemoryUserRepo = (initial: UserRow[] = []) =>
           }),
 
         list: () => Ref.get(store).pipe(Effect.map((rows) => rows.map(toUser))),
+
+        findManyByIds: (ids) =>
+          Ref.get(store).pipe(
+            Effect.map((rows) => rows.filter((r) => ids.includes(r.id)).map(toUser))
+          ),
       }
     })
   )
