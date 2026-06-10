@@ -70,10 +70,10 @@ importers:
   packages/contract:
     dependencies:
       '@effect/platform':
-        specifier: latest
+        specifier: ^0.96.1
         version: 0.96.1(effect@3.21.3)
       effect:
-        specifier: latest
+        specifier: ^3.21.3
         version: 3.21.3
 
   packages/web:
