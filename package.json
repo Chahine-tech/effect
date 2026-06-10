@@ -13,6 +13,7 @@
     "lint:fix": "oxlint --fix --node-plugin packages"
   },
   "devDependencies": {
-    "oxlint": "^1.69.0"
+    "oxlint": "^1.69.0",
+    "typescript": "~5.9.3"
   }
 }

@@ -1,96 +1,105 @@
-import { eq, inArray } from "drizzle-orm"
-import { Effect, Layer } from "effect"
-import { Conflict, InternalError, NotFound, User } from "@myapp/contract"
+import { SqlClient } from "@effect/sql"
+import { Effect, Layer, Schema } from "effect"
+import { InternalError, NotFound, User } from "@myapp/contract"
 import { UserRepository, type CreateUserInput } from "../../domain/user.js"
-import { Database } from "./db.js"
-import { users } from "./schema.js"
+import { decodeMany, sqlConflictOrError, sqlError } from "./sql-helpers.js"
 
-const toUser = (row: { id: number; name: string; email: string }): User =>
-  new User({ id: row.id, name: row.name, email: row.email })
+const UserRowPublic = Schema.Struct({
+  id: Schema.Number,
+  name: Schema.String,
+  email: Schema.String,
+})
 
-const catchSql = (e: unknown) => {
-  const cause = (e as { cause?: { code?: string } })?.cause
-  if (cause?.code === "23505") return new Conflict({ message: "Email already taken" })
-  return new InternalError({ message: String(e) })
-}
+const UserRowWithHash = Schema.Struct({
+  id: Schema.Number,
+  name: Schema.String,
+  email: Schema.String,
+  password_hash: Schema.String,
+})
+
+type UserRowPublic = typeof UserRowPublic.Type
+type UserRowWithHash = typeof UserRowWithHash.Type
+
+const toUser = (row: UserRowPublic): User => new User({ id: row.id, name: row.name, email: row.email })
 
 export const UserRepositoryLive = Layer.effect(
   UserRepository,
   Effect.gen(function* () {
-    const db = yield* Database
+    const sql = yield* SqlClient.SqlClient
 
     return {
       findById: (id) =>
-        Effect.gen(function* () {
-          const result = yield* Effect.tryPromise({
-            try: () => db.select().from(users).where(eq(users.id, id)),
-            catch: (e) => new InternalError({ message: String(e) }),
+        sql`SELECT id, name, email FROM users WHERE id = ${id}`.pipe(
+          Effect.mapError(sqlError),
+          Effect.flatMap(decodeMany(UserRowPublic)),
+          Effect.flatMap((r) => {
+            const found = r[0]
+            if (!found) return Effect.fail(new NotFound({ message: `User ${id} not found` }))
+            return Effect.succeed(toUser(found))
           })
-          const row = result[0]
-          if (!row) return yield* Effect.fail(new NotFound({ message: `User ${id} not found` }))
-          return toUser(row)
-        }),
+        ),
 
       findByEmail: (email) =>
-        Effect.gen(function* () {
-          const result = yield* Effect.tryPromise({
-            try: () => db.select().from(users).where(eq(users.email, email)),
-            catch: (e) => new InternalError({ message: String(e) }),
+        sql`SELECT id, name, email FROM users WHERE email = ${email}`.pipe(
+          Effect.mapError(sqlError),
+          Effect.flatMap(decodeMany(UserRowPublic)),
+          Effect.flatMap((r) => {
+            const found = r[0]
+            if (!found) return Effect.fail(new NotFound({ message: `User not found` }))
+            return Effect.succeed(toUser(found))
           })
-          const row = result[0]
-          if (!row) return yield* Effect.fail(new NotFound({ message: `User not found` }))
-          return toUser(row)
-        }),
+        ),
 
       findByEmailWithHash: (email) =>
-        Effect.gen(function* () {
-          const result = yield* Effect.tryPromise({
-            try: () => db.select().from(users).where(eq(users.email, email)),
-            catch: (e) => new InternalError({ message: String(e) }),
+        sql`SELECT id, name, email, password_hash FROM users WHERE email = ${email}`.pipe(
+          Effect.mapError(sqlError),
+          Effect.flatMap(decodeMany(UserRowWithHash)),
+          Effect.flatMap((r) => {
+            const found = r[0]
+            if (!found) return Effect.fail(new NotFound({ message: `User not found` }))
+            return Effect.succeed({ user: toUser(found), passwordHash: found.password_hash })
           })
-          const row = result[0]
-          if (!row) return yield* Effect.fail(new NotFound({ message: `User not found` }))
-          return { user: toUser(row), passwordHash: row.passwordHash }
-        }),
+        ),
 
       create: (input: CreateUserInput) =>
-        Effect.gen(function* () {
-          const result = yield* Effect.tryPromise({
-            try: () =>
-              db
-                .insert(users)
-                .values({ name: input.name, email: input.email, passwordHash: input.passwordHash })
-                .returning(),
-            catch: catchSql,
+        sql`
+          INSERT INTO users (name, email, password_hash)
+          VALUES (${input.name}, ${input.email}, ${input.passwordHash})
+          RETURNING id, name, email
+        `.pipe(
+          Effect.mapError(sqlConflictOrError("Email already taken")),
+          Effect.flatMap(decodeMany(UserRowPublic)),
+          Effect.flatMap((r) => {
+            const found = r[0]
+            if (!found) return Effect.fail(new InternalError({ message: "Insert returned no row" }))
+            return Effect.succeed(toUser(found))
           })
-          const row = result[0]
-          if (!row)
-            return yield* Effect.fail(new InternalError({ message: "Insert returned no row" }))
-          return toUser(row)
-        }),
+        ),
 
       remove: (id) =>
-        Effect.gen(function* () {
-          const result = yield* Effect.tryPromise({
-            try: () => db.delete(users).where(eq(users.id, id)).returning(),
-            catch: (e) => new InternalError({ message: String(e) }),
+        sql`DELETE FROM users WHERE id = ${id} RETURNING id`.pipe(
+          Effect.mapError(sqlError),
+          Effect.flatMap(decodeMany(Schema.Struct({ id: Schema.Number }))),
+          Effect.flatMap((r) => {
+            if (!r[0]) return Effect.fail(new NotFound({ message: `User ${id} not found` }))
+            return Effect.void
           })
-          if (!result[0])
-            return yield* Effect.fail(new NotFound({ message: `User ${id} not found` }))
-        }),
+        ),
 
       list: () =>
-        Effect.tryPromise({
-          try: () => db.select().from(users),
-          catch: (e) => new InternalError({ message: String(e) }),
-        }).pipe(Effect.map((rows) => rows.map(toUser))),
+        sql`SELECT id, name, email FROM users`.pipe(
+          Effect.mapError(sqlError),
+          Effect.flatMap(decodeMany(UserRowPublic)),
+          Effect.map((r) => r.map(toUser))
+        ),
 
       findManyByIds: (ids) => {
         if (ids.length === 0) return Effect.succeed([])
-        return Effect.tryPromise({
-          try: () => db.select().from(users).where(inArray(users.id, Array.from(ids))),
-          catch: (e) => new InternalError({ message: String(e) }),
-        }).pipe(Effect.map((rows) => rows.map(toUser)))
+        return sql`SELECT id, name, email FROM users WHERE id = ANY(${ids})`.pipe(
+          Effect.mapError(sqlError),
+          Effect.flatMap(decodeMany(UserRowPublic)),
+          Effect.map((r) => r.map(toUser))
+        )
       },
     }
   })

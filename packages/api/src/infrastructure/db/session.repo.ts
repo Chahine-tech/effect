@@ -1,14 +1,20 @@
-import { and, eq, gt } from "drizzle-orm"
-import { Effect, Layer } from "effect"
-import { InternalError, Unauthorized } from "@myapp/contract"
+import { SqlClient } from "@effect/sql"
+import { Effect, Layer, Schema } from "effect"
+import { Unauthorized } from "@myapp/contract"
 import { SessionRepository } from "../../domain/session.js"
-import { Database } from "./db.js"
-import { sessions } from "./schema.js"
+import { decodeMany, sqlError } from "./sql-helpers.js"
+
+const SessionRow = Schema.Struct({
+  id: Schema.String,
+  user_id: Schema.Number,
+})
+
+type SessionRow = typeof SessionRow.Type
 
 export const SessionRepositoryLive = Layer.effect(
   SessionRepository,
   Effect.gen(function* () {
-    const db = yield* Database
+    const sql = yield* SqlClient.SqlClient
 
     return {
       create: (userId, meta) =>
@@ -19,47 +25,45 @@ export const SessionRepositoryLive = Layer.effect(
               .map((b) => b.toString(16).padStart(2, "0"))
               .join("")
           })
-          yield* Effect.tryPromise({
-            try: () =>
-              db.insert(sessions).values({
-                id: token,
-                userId,
-                expiresAt: new Date(Date.now() + 86400 * 1000),
-                ip: meta.ip,
-                userAgent: meta.userAgent,
-              }),
-            catch: (e) => new InternalError({ message: String(e) }),
-          })
+          yield* sql`
+            INSERT INTO sessions (id, user_id, expires_at, ip, user_agent)
+            VALUES (
+              ${token},
+              ${userId},
+              ${new Date(Date.now() + 86400 * 1000)},
+              ${meta.ip ?? null},
+              ${meta.userAgent ?? null}
+            )
+          `.pipe(Effect.mapError(sqlError))
           return token
         }),
 
       verify: (token) =>
-        Effect.gen(function* () {
-          const result = yield* Effect.tryPromise({
-            try: () =>
-              db
-                .select()
-                .from(sessions)
-                .where(and(eq(sessions.id, token), gt(sessions.expiresAt, new Date()))),
-            catch: () => new Unauthorized({ message: "Invalid session" }),
-          })
-          const session = result[0]
-          if (!session)
-            return yield* Effect.fail(new Unauthorized({ message: "Session expired or not found" }))
-          return { userId: session.userId }
-        }),
+        sql`
+          SELECT id, user_id FROM sessions
+          WHERE id = ${token} AND expires_at > NOW()
+        `.pipe(
+          Effect.flatMap(decodeMany(SessionRow)),
+          Effect.flatMap((r) => {
+            const session = r[0]
+            if (!session)
+              return Effect.fail(new Unauthorized({ message: "Session expired or not found" }))
+            return Effect.succeed({ userId: session.user_id })
+          }),
+          Effect.mapError((_) => new Unauthorized({ message: "Invalid session" }))
+        ),
 
       revoke: (token) =>
-        Effect.tryPromise({
-          try: () => db.delete(sessions).where(eq(sessions.id, token)),
-          catch: (e) => new InternalError({ message: String(e) }),
-        }).pipe(Effect.asVoid),
+        sql`DELETE FROM sessions WHERE id = ${token}`.pipe(
+          Effect.mapError(sqlError),
+          Effect.asVoid
+        ),
 
       revokeAll: (userId) =>
-        Effect.tryPromise({
-          try: () => db.delete(sessions).where(eq(sessions.userId, userId)),
-          catch: (e) => new InternalError({ message: String(e) }),
-        }).pipe(Effect.asVoid),
+        sql`DELETE FROM sessions WHERE user_id = ${userId}`.pipe(
+          Effect.mapError(sqlError),
+          Effect.asVoid
+        ),
     }
   })
 )

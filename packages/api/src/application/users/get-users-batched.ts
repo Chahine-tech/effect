@@ -22,22 +22,25 @@ export const GetUserBatchedUseCaseLive = Layer.effect(
 
     const resolver = RequestResolver.makeBatched(
       (requests: [GetUserByIdReq, ...GetUserByIdReq[]]) =>
-        Effect.gen(function* () {
-          const ids = requests.map((r) => r.id)
-          const users = yield* repo.findManyByIds(ids)
-          const byId = new Map(users.map((u) => [u.id, u]))
-
-          yield* Effect.forEach(
-            requests,
-            (req) => {
-              const user = byId.get(req.id)
-              return user
-                ? Request.succeed(req, user)
-                : Request.fail(req, new NotFoundError({ message: `User ${req.id} not found` }))
+        repo.findManyByIds(requests.map((r) => r.id)).pipe(
+          Effect.matchEffect({
+            onFailure: (error) =>
+              Effect.forEach(requests, (req) => Request.fail(req, error), { discard: true }),
+            onSuccess: (users) => {
+              const byId = new Map(users.map((u) => [u.id, u]))
+              return Effect.forEach(
+                requests,
+                (req) => {
+                  const user = byId.get(req.id)
+                  return user
+                    ? Request.succeed(req, user)
+                    : Request.fail(req, new NotFoundError({ message: `User ${req.id} not found` }))
+                },
+                { discard: true }
+              )
             },
-            { discard: true }
-          )
-        })
+          })
+        )
     )
 
     return (id) =>

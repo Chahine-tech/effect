@@ -13,7 +13,7 @@ import { ListUsersUseCaseLive } from "../application/users/list-users.js"
 import { RemoveUserUseCaseLive } from "../application/users/remove-user.js"
 
 import { AppConfig, AppConfigLive } from "../infrastructure/config.js"
-import { DbLive } from "../infrastructure/db/db.js"
+import { SqlClientLive } from "../infrastructure/db/db.js"
 import { SessionRepositoryLive } from "../infrastructure/db/session.repo.js"
 import { UserRepositoryLive } from "../infrastructure/db/user.repo.js"
 import { EventWorkerLive, UserEventBusLive } from "../infrastructure/events.js"
@@ -27,11 +27,10 @@ import { AuthenticationLive } from "./middleware/auth.middleware.js"
 import { RateLimiterLive } from "./middleware/rate-limit.middleware.js"
 
 const RepositoriesLive = Layer.mergeAll(UserRepositoryLive, SessionRepositoryLive).pipe(
-  Layer.provide(DbLive),
-  Layer.provide(AppConfigLive)
+  Layer.provide(SqlClientLive)
 )
 
-const InfraLive = Layer.mergeAll(RepositoriesLive, PasswordServiceLive, UserEventBusLive)
+const InfraLive = Layer.mergeAll(RepositoriesLive, PasswordServiceLive)
 
 const UseCasesLive = Layer.mergeAll(
   LoginUseCaseLive,
