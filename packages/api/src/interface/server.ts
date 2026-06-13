@@ -21,6 +21,7 @@ import { PasswordServiceLive } from "../infrastructure/password.js"
 import { OtlpLive } from "../infrastructure/telemetry.js"
 
 import { AuthHandlerLive } from "./handlers/auth.handler.js"
+import { EventsHandlerLive } from "./handlers/events.handler.js"
 import { HealthHandlerLive } from "./handlers/health.handler.js"
 import { MetricsHandlerLive } from "./handlers/metrics.handler.js"
 import { UsersHandlerLive } from "./handlers/users.handler.js"
@@ -62,6 +63,7 @@ HttpApiBuilder.serve(HttpMiddleware.logger).pipe(
   Layer.provide(HttpApiBuilder.middlewareOpenApi()),
   Layer.provide(HttpApiBuilder.middlewareCors()),
   Layer.provide(ApiLive),
+  Layer.provide(EventsHandlerLive),
   Layer.provide(EventWorkerLive),
   Layer.provide(UserEventBusLive),
   HttpServer.withLogAddress,

@@ -1,5 +1,9 @@
 import { Schema } from "effect"
 
+const Email = Schema.String.pipe(Schema.pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/))
+const Password = Schema.String.pipe(Schema.minLength(8))
+const Name = Schema.String.pipe(Schema.minLength(1), Schema.maxLength(50))
+
 export class User extends Schema.Class<User>("User")({
   id: Schema.Number,
   name: Schema.String,
@@ -7,18 +11,18 @@ export class User extends Schema.Class<User>("User")({
 }) {}
 
 export class LoginPayload extends Schema.Class<LoginPayload>("LoginPayload")({
-  email: Schema.String,
-  password: Schema.String,
+  email: Email,
+  password: Password,
 }) {}
 
 export class RegisterPayload extends Schema.Class<RegisterPayload>("RegisterPayload")({
-  name: Schema.String,
-  email: Schema.String,
-  password: Schema.String,
+  name: Name,
+  email: Email,
+  password: Password,
 }) {}
 
 export class CreateUserPayload extends Schema.Class<CreateUserPayload>("CreateUserPayload")({
-  name: Schema.String,
-  email: Schema.String,
-  password: Schema.String,
+  name: Name,
+  email: Email,
+  password: Password,
 }) {}

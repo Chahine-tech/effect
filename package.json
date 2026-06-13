@@ -3,7 +3,9 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "dev": "pnpm --filter @myapp/api dev",
+    "dev": "pnpm --parallel --filter @myapp/api --filter @myapp/web run dev",
+    "dev:api": "pnpm --filter @myapp/api dev",
+    "dev:web": "pnpm --filter @myapp/web dev",
     "start": "pnpm --filter @myapp/api start",
     "db:generate": "pnpm --filter @myapp/api db:generate",
     "db:migrate": "pnpm --filter @myapp/api db:migrate",
