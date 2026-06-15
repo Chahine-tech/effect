@@ -49,7 +49,7 @@ export function LoginPage() {
     }
   })()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit: React.FormEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault()
     const result = Schema.decodeEither(LoginPayload)({ email, password }, { errors: "all" })
     if (Either.isLeft(result)) {

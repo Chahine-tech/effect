@@ -55,7 +55,7 @@ export function RegisterPage() {
     }
   })()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit: React.FormEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault()
     const result = Schema.decodeEither(RegisterPayload)({ name, email, password }, { errors: "all" })
     if (Either.isLeft(result)) {
