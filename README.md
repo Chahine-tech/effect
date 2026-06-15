@@ -20,25 +20,33 @@ Production-ready fullstack monorepo with Effect, React, and end-to-end type safe
 **Shared**
 - **@myapp/contract** — `HttpApi` definition consumed by both API handlers and `HttpApiClient` on the frontend; renaming any endpoint breaks both sides at compile time
 
-## Structure
+## Architecture
 
-```
-packages/
-  contract/   # shared API schema, types, errors
-  api/        # backend — clean architecture
-    src/
-      domain/         # ports (Context.Tag interfaces)
-      application/    # use cases
-      infrastructure/ # adapters (DB, password, events, metrics)
-      interface/      # HTTP handlers, middleware
-      migrate.ts      # standalone migration runner
-  web/        # frontend — Vite + React
-    src/
-      lib/            # Effect → Promise bridge, QueryClient
-      pages/          # Login, Register, Users
-      components/     # Root layout + nav
-      router.tsx      # route tree with loaders
-      main.tsx        # entry point
+```mermaid
+graph TD
+  subgraph web["@myapp/web (Vite + React)"]
+    router["TanStack Router\nloaders · auth guards · SSE refresh"]
+    pages["Pages — Login / Register / Users"]
+    bridge["runApiResult\nEffect → Promise · AbortSignal · typed errors"]
+  end
+
+  subgraph contract["@myapp/contract (shared)"]
+    schema["HttpApi definition\nschemas · typed errors · endpoints"]
+  end
+
+  subgraph api["@myapp/api (Effect)"]
+    interface["interface/\nhandlers · middleware · rate limiting"]
+    application["application/\nuse cases"]
+    domain["domain/\nports (Context.Tag)"]
+    infrastructure["infrastructure/\nDB · password · events · metrics · telemetry"]
+  end
+
+  browser(["Browser"]) -->|"relative URLs via Vite proxy"| router
+  router --> bridge
+  bridge -->|"HttpApiClient (fully typed)"| schema
+  schema -->|"HttpApiBuilder (fully typed)"| interface
+  interface --> application --> domain
+  infrastructure --> domain
 ```
 
 ## Quick start
