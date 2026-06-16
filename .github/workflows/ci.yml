@@ -71,7 +71,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Run DB migrations
-        run: pnpm --filter @myapp/api db:migrate
+        run: node --import tsx/esm src/migrate.ts
+        working-directory: packages/api
 
       - name: Install Playwright browsers
         run: pnpm --filter @myapp/web exec playwright install --with-deps chromium
