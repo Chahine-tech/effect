@@ -46,8 +46,8 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd pg_isready
-          --health-interval 5s
+          --health-cmd "pg_isready -h localhost -U postgres -d myapp_test"
+          --health-interval 10s
           --health-timeout 5s
           --health-retries 10
 
@@ -73,6 +73,7 @@ jobs:
       - name: Run DB migrations
         run: node --import tsx/esm src/migrate.ts
         working-directory: packages/api
+        timeout-minutes: 2
 
       - name: Install Playwright browsers
         run: pnpm --filter @myapp/web exec playwright install --with-deps chromium
