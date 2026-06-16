@@ -25,11 +25,12 @@
   },
   "overrides": [
     {
-      "files": ["**/*.test.ts"],
+      "files": ["**/*.test.ts", "**/*.test.tsx", "**/test/setup.ts"],
       "rules": {
         "typescript/no-explicit-any": "off",
         "no-console": "off",
-        "no-underscore-dangle": "off"
+        "no-underscore-dangle": "off",
+        "import/no-unassigned-import": "off"
       }
     }
   ],

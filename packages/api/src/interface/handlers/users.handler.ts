@@ -1,10 +1,11 @@
 import { HttpApiBuilder } from "@effect/platform"
 import { Effect, Layer } from "effect"
-import { MyApi } from "@myapp/contract"
+import { MyApi, PaginatedUsers } from "@myapp/contract"
 import { CreateUserUseCase } from "../../application/users/create-user.js"
 import { GetUserUseCase } from "../../application/users/get-user.js"
 import { ListUsersUseCase } from "../../application/users/list-users.js"
 import { RemoveUserUseCase } from "../../application/users/remove-user.js"
+import { UpdateUserUseCase } from "../../application/users/update-user.js"
 import { AuthenticationLive } from "../middleware/auth.middleware.js"
 
 export const UsersHandlerLive = HttpApiBuilder.group(
@@ -12,10 +13,11 @@ export const UsersHandlerLive = HttpApiBuilder.group(
   "users",
   (handlers) =>
     handlers
-      .handle("list", (_) =>
+      .handle("list", ({ urlParams: { limit, offset } }) =>
         Effect.gen(function* () {
           const listUsers = yield* ListUsersUseCase
-          return yield* listUsers()
+          const { users, total } = yield* listUsers({ limit, offset })
+          return new PaginatedUsers({ users, total, offset, limit })
         })
       )
       .handle("findById", ({ path: { id } }) =>
@@ -31,6 +33,15 @@ export const UsersHandlerLive = HttpApiBuilder.group(
             name: payload.name,
             email: payload.email,
             password: payload.password,
+          })
+        })
+      )
+      .handle("update", ({ path: { id }, payload }) =>
+        Effect.gen(function* () {
+          const updateUser = yield* UpdateUserUseCase
+          return yield* updateUser(id, {
+            ...(payload.name !== undefined ? { name: payload.name } : {}),
+            ...(payload.email !== undefined ? { email: payload.email } : {}),
           })
         })
       )

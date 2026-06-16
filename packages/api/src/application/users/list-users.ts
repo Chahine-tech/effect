@@ -4,13 +4,15 @@ import { UserRepository } from "../../domain/user.js"
 
 export class ListUsersUseCase extends Context.Tag("ListUsersUseCase")<
   ListUsersUseCase,
-  () => Effect.Effect<ReadonlyArray<User>, InternalError>
+  (params: { limit: number; offset: number }) => Effect.Effect<{ users: ReadonlyArray<User>; total: number }, InternalError>
 >() {}
 
 export const ListUsersUseCaseLive = Layer.effect(
   ListUsersUseCase,
   Effect.gen(function* () {
     const userRepo = yield* UserRepository
-    return Effect.fn("ListUsersUseCase")(() => userRepo.list())
+    return Effect.fn("ListUsersUseCase")((params: { limit: number; offset: number }) =>
+      userRepo.list(params)
+    )
   })
 )

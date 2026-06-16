@@ -11,6 +11,7 @@ import { CreateUserUseCaseLive } from "../application/users/create-user.js"
 import { GetUserUseCaseLive } from "../application/users/get-user.js"
 import { ListUsersUseCaseLive } from "../application/users/list-users.js"
 import { RemoveUserUseCaseLive } from "../application/users/remove-user.js"
+import { UpdateUserUseCaseLive } from "../application/users/update-user.js"
 
 import { AppConfig, AppConfigLive } from "../infrastructure/config.js"
 import { SqlClientLive } from "../infrastructure/db/db.js"
@@ -40,7 +41,8 @@ const UseCasesLive = Layer.mergeAll(
   CreateUserUseCaseLive,
   GetUserUseCaseLive,
   ListUsersUseCaseLive,
-  RemoveUserUseCaseLive
+  RemoveUserUseCaseLive,
+  UpdateUserUseCaseLive
 )
 
 const ApiLive = HttpApiBuilder.api(MyApi).pipe(

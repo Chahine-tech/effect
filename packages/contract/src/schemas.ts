@@ -26,3 +26,15 @@ export class CreateUserPayload extends Schema.Class<CreateUserPayload>("CreateUs
   email: Email,
   password: Password,
 }) {}
+
+export class UpdateUserPayload extends Schema.Class<UpdateUserPayload>("UpdateUserPayload")({
+  name: Schema.optional(Name),
+  email: Schema.optional(Email),
+}) {}
+
+export class PaginatedUsers extends Schema.Class<PaginatedUsers>("PaginatedUsers")({
+  users: Schema.Array(User),
+  total: Schema.Number,
+  offset: Schema.Number,
+  limit: Schema.Number,
+}) {}

@@ -1,6 +1,8 @@
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router"
 import { useMutation } from "@tanstack/react-query"
+import { Toaster } from "sonner"
 import { runApi } from "../lib/api"
+import { ErrorBoundary } from "./ErrorBoundary"
 
 export function Root() {
   const navigate = useNavigate()
@@ -24,6 +26,7 @@ export function Root() {
             <nav className="flex items-center gap-1">
               <Link
                 to="/users"
+                search={{ page: 1 }}
                 className="px-3 py-1.5 rounded-md text-sm text-slate-500 hover:text-slate-900 hover:bg-slate-100 [&.active]:bg-slate-100 [&.active]:text-slate-900 [&.active]:font-medium transition-colors"
               >
                 Users
@@ -60,8 +63,12 @@ export function Root() {
       </header>
 
       <main className="max-w-5xl mx-auto px-6 py-10">
-        <Outlet />
+        <ErrorBoundary>
+          <Outlet />
+        </ErrorBoundary>
       </main>
+
+      <Toaster position="bottom-right" richColors />
     </div>
   )
 }

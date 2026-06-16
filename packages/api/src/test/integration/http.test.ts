@@ -10,6 +10,7 @@ import { CreateUserUseCaseLive } from "../../application/users/create-user.js"
 import { GetUserUseCaseLive } from "../../application/users/get-user.js"
 import { ListUsersUseCaseLive } from "../../application/users/list-users.js"
 import { RemoveUserUseCaseLive } from "../../application/users/remove-user.js"
+import { UpdateUserUseCaseLive } from "../../application/users/update-user.js"
 
 import { AuthHandlerLive } from "../../interface/handlers/auth.handler.js"
 import { HealthHandlerLive } from "../../interface/handlers/health.handler.js"
@@ -31,7 +32,8 @@ const TestUseCasesLive = Layer.mergeAll(
   CreateUserUseCaseLive,
   GetUserUseCaseLive,
   ListUsersUseCaseLive,
-  RemoveUserUseCaseLive
+  RemoveUserUseCaseLive,
+  UpdateUserUseCaseLive
 )
 
 const TestApiLive = HttpApiBuilder.api(MyApi).pipe(
@@ -103,7 +105,7 @@ describe("HTTP Integration", () => {
     Effect.gen(function* () {
       jar.cookie = ""
       const c = yield* client
-      const err = yield* c.users.list().pipe(Effect.flip)
+      const err = yield* c.users.list({ urlParams: { limit: 10, offset: 0 } }).pipe(Effect.flip)
       expect(err._tag).toBe("Unauthorized")
     })
   )
@@ -121,7 +123,7 @@ describe("HTTP Integration", () => {
 
       expect(jar.cookie).toMatch(/session=/)
 
-      const users = yield* c.users.list()
+      const { users } = yield* c.users.list({ urlParams: { limit: 10, offset: 0 } })
       expect(users.some((u) => u.id === user.id)).toBe(true)
 
       const found = yield* c.users.findById({ path: { id: user.id } })

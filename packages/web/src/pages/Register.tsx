@@ -6,7 +6,7 @@ import { ArrayFormatter } from "effect/ParseResult"
 import { RegisterPayload } from "@myapp/contract"
 import { runApiResult } from "../lib/api"
 
-type FieldErrors = Partial<Record<keyof typeof RegisterPayload.fields, string>>
+type FieldErrors = Partial<Record<keyof typeof RegisterPayload.fields | "confirmPassword", string>>
 
 const FIELD_MESSAGES: Record<string, string> = {
   name: "Name must be between 1 and 50 characters",
@@ -31,6 +31,7 @@ export function RegisterPage() {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
 
   const register = useMutation({
@@ -40,7 +41,7 @@ export function RegisterPage() {
       return runApiResult((c) => c.auth.login({ payload: { email: data.email, password: data.password } }))
     },
     onSuccess: (result) => {
-      if (result._tag === "Ok") navigate({ to: "/users" })
+      if (result._tag === "Ok") navigate({ to: "/users", search: { page: 1 } })
     },
   })
 
@@ -62,6 +63,10 @@ export function RegisterPage() {
       setFieldErrors(parseFieldErrors(result.left))
       return
     }
+    if (password !== confirmPassword) {
+      setFieldErrors({ confirmPassword: "Passwords do not match" })
+      return
+    }
     setFieldErrors({})
     register.mutate(result.right)
   }
@@ -75,7 +80,7 @@ export function RegisterPage() {
         </div>
 
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium text-slate-700">Name</label>
               <input
@@ -84,7 +89,6 @@ export function RegisterPage() {
                 value={name}
                 onChange={(e) => { setName(e.target.value); setFieldErrors((f) => ({ ...f, name: undefined })) }}
                 className={`border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:border-transparent transition-shadow ${fieldErrors.name ? "border-red-300 focus:ring-red-400" : "border-slate-200 focus:ring-slate-400"}`}
-                required
               />
               {fieldErrors.name && <p className="text-xs text-red-500">{fieldErrors.name}</p>}
             </div>
@@ -97,7 +101,6 @@ export function RegisterPage() {
                 value={email}
                 onChange={(e) => { setEmail(e.target.value); setFieldErrors((f) => ({ ...f, email: undefined })) }}
                 className={`border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:border-transparent transition-shadow ${fieldErrors.email ? "border-red-300 focus:ring-red-400" : "border-slate-200 focus:ring-slate-400"}`}
-                required
               />
               {fieldErrors.email && <p className="text-xs text-red-500">{fieldErrors.email}</p>}
             </div>
@@ -110,9 +113,20 @@ export function RegisterPage() {
                 value={password}
                 onChange={(e) => { setPassword(e.target.value); setFieldErrors((f) => ({ ...f, password: undefined })) }}
                 className={`border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:border-transparent transition-shadow ${fieldErrors.password ? "border-red-300 focus:ring-red-400" : "border-slate-200 focus:ring-slate-400"}`}
-                required
               />
               {fieldErrors.password && <p className="text-xs text-red-500">{fieldErrors.password}</p>}
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium text-slate-700">Confirm password</label>
+              <input
+                type="password"
+                placeholder="Repeat your password"
+                value={confirmPassword}
+                onChange={(e) => { setConfirmPassword(e.target.value); setFieldErrors((f) => ({ ...f, confirmPassword: undefined })) }}
+                className={`border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:border-transparent transition-shadow ${fieldErrors.confirmPassword ? "border-red-300 focus:ring-red-400" : "border-slate-200 focus:ring-slate-400"}`}
+              />
+              {fieldErrors.confirmPassword && <p className="text-xs text-red-500">{fieldErrors.confirmPassword}</p>}
             </div>
 
             {apiError && (

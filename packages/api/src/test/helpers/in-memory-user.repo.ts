@@ -56,6 +56,18 @@ export const makeInMemoryUserRepo = (initial: UserRow[] = []) =>
             return toUser(row)
           }),
 
+        update: (id, input) =>
+          Effect.gen(function* () {
+            const rows = yield* Ref.get(store)
+            const idx = rows.findIndex((r) => r.id === id)
+            if (idx === -1) return yield* Effect.fail(new NotFound({ message: `User ${id} not found` }))
+            if (input.email && rows.some((r) => r.email === input.email && r.id !== id))
+              return yield* Effect.fail(new Conflict({ message: "Email already taken" }))
+            const updated = { ...rows[idx]!, ...(input.name ? { name: input.name } : {}), ...(input.email ? { email: input.email } : {}) }
+            yield* Ref.update(store, (rs) => rs.map((r, i) => (i === idx ? updated : r)))
+            return toUser(updated)
+          }),
+
         remove: (id) =>
           Effect.gen(function* () {
             const rows = yield* Ref.get(store)
@@ -64,7 +76,13 @@ export const makeInMemoryUserRepo = (initial: UserRow[] = []) =>
             yield* Ref.update(store, (rs) => rs.filter((r) => r.id !== id))
           }),
 
-        list: () => Ref.get(store).pipe(Effect.map((rows) => rows.map(toUser))),
+        list: ({ limit, offset }) =>
+          Ref.get(store).pipe(
+            Effect.map((rows) => ({
+              users: rows.slice(offset, offset + limit).map(toUser),
+              total: rows.length,
+            }))
+          ),
 
         findManyByIds: (ids) =>
           Ref.get(store).pipe(

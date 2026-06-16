@@ -41,8 +41,10 @@ export const SessionRepositoryLive = Layer.effect(
 
       verify: (token) =>
         sql`
-          SELECT id, user_id FROM sessions
+          UPDATE sessions
+          SET expires_at = NOW() + INTERVAL '24 hours'
           WHERE id = ${token} AND expires_at > NOW()
+          RETURNING id, user_id
         `.pipe(
           Effect.flatMap(decodeMany(SessionRow)),
           Effect.flatMap((r) => {

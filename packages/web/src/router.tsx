@@ -16,7 +16,7 @@ const rootRoute = createRootRoute({ component: Root })
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
-  component: () => <Navigate to="/users" />,
+  component: () => <Navigate to="/users" search={{ page: 1 }} />,
 })
 
 const loginRoute = createRoute({
@@ -31,16 +31,23 @@ const registerRoute = createRoute({
   component: RegisterPage,
 })
 
+const PAGE_SIZE = 10
+
 const usersRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/users",
-  loader: async ({ abortController }) => {
+  validateSearch: (search: Record<string, unknown>) => ({
+    page: Math.max(1, Number(search.page) || 1),
+  }),
+  loaderDeps: ({ search: { page } }) => ({ page }),
+  loader: async ({ deps: { page }, abortController }) => {
     const signal = abortController.signal
-    // signal fires if the user navigates away before the loader completes —
-    // the Effect fiber is interrupted, preventing stale state updates.
-    const result = await runApiResult((c) => c.users.list(), signal)
+    const offset = (page - 1) * PAGE_SIZE
+    const result = await runApiResult(
+      (c) => c.users.list({ urlParams: { limit: PAGE_SIZE, offset } }),
+      signal
+    )
     if (result._tag === "Err") {
-      // result.error is typed as Unauthorized | InternalError
       if (result.error._tag === "Unauthorized") throw redirect({ to: "/login" })
       throw result.error
     }

@@ -30,9 +30,12 @@ export const InMemorySessionRepo = Layer.effect(
         Ref.get(store).pipe(
           Effect.flatMap((rows) => {
             const session = rows.find((r) => r.id === token && r.expiresAt > new Date())
-            return session
-              ? Effect.succeed({ userId: session.userId })
-              : Effect.fail(new Unauthorized({ message: "Invalid session" }))
+            if (!session) return Effect.fail(new Unauthorized({ message: "Invalid session" }))
+            return Ref.update(store, (rs) =>
+              rs.map((r) =>
+                r.id === token ? { ...r, expiresAt: new Date(Date.now() + 86400_000) } : r
+              )
+            ).pipe(Effect.as({ userId: session.userId }))
           })
         ),
 

@@ -35,7 +35,7 @@ export function LoginPage() {
     mutationFn: (data: { email: string; password: string }) =>
       runApiResult((c) => c.auth.login({ payload: data })),
     onSuccess: (result) => {
-      if (result._tag === "Ok") navigate({ to: "/users" })
+      if (result._tag === "Ok") navigate({ to: "/users", search: { page: 1 } })
     },
   })
 
@@ -69,7 +69,7 @@ export function LoginPage() {
         </div>
 
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium text-slate-700">Email</label>
               <input

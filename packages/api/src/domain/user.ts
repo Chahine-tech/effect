@@ -8,6 +8,11 @@ export interface CreateUserInput {
   passwordHash: string
 }
 
+export interface UpdateUserInput {
+  name?: string
+  email?: string
+}
+
 export class UserRepository extends Context.Tag("UserRepository")<
   UserRepository,
   {
@@ -17,8 +22,9 @@ export class UserRepository extends Context.Tag("UserRepository")<
       email: string
     ) => Effect.Effect<{ user: User; passwordHash: string }, NotFound | InternalError>
     create: (input: CreateUserInput) => Effect.Effect<User, Conflict | InternalError>
+    update: (id: number, input: UpdateUserInput) => Effect.Effect<User, NotFound | Conflict | InternalError>
     remove: (id: number) => Effect.Effect<void, NotFound | InternalError>
-    list: () => Effect.Effect<ReadonlyArray<User>, InternalError>
+    list: (params: { limit: number; offset: number }) => Effect.Effect<{ users: ReadonlyArray<User>; total: number }, InternalError>
     findManyByIds: (ids: ReadonlyArray<number>) => Effect.Effect<ReadonlyArray<User>, InternalError>
   }
 >() {}

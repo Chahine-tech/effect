@@ -77,6 +77,24 @@ export const UserRepositoryLive = Layer.effect(
           })
         ),
 
+      update: (id, input) =>
+        sql`
+          UPDATE users
+          SET
+            name = COALESCE(${input.name ?? null}, name),
+            email = COALESCE(${input.email ?? null}, email)
+          WHERE id = ${id}
+          RETURNING id, name, email
+        `.pipe(
+          Effect.mapError(sqlConflictOrError("Email already taken")),
+          Effect.flatMap(decodeMany(UserRowPublic)),
+          Effect.flatMap((r) => {
+            const found = r[0]
+            if (!found) return Effect.fail(new NotFound({ message: `User ${id} not found` }))
+            return Effect.succeed(toUser(found))
+          })
+        ),
+
       remove: (id) =>
         sql`DELETE FROM users WHERE id = ${id} RETURNING id`.pipe(
           Effect.mapError(sqlError),
@@ -87,12 +105,19 @@ export const UserRepositoryLive = Layer.effect(
           })
         ),
 
-      list: () =>
-        sql`SELECT id, name, email FROM users`.pipe(
-          Effect.mapError(sqlError),
-          Effect.flatMap(decodeMany(UserRowPublic)),
-          Effect.map((r) => r.map(toUser))
-        ),
+      list: ({ limit, offset }) =>
+        Effect.all({
+          users: sql`SELECT id, name, email FROM users ORDER BY id LIMIT ${limit} OFFSET ${offset}`.pipe(
+            Effect.mapError(sqlError),
+            Effect.flatMap(decodeMany(UserRowPublic)),
+            Effect.map((r) => r.map(toUser))
+          ),
+          total: sql`SELECT COUNT(*)::int AS count FROM users`.pipe(
+            Effect.mapError(sqlError),
+            Effect.flatMap(decodeMany(Schema.Struct({ count: Schema.Number }))),
+            Effect.map((r) => r[0]?.count ?? 0)
+          ),
+        }),
 
       findManyByIds: (ids) => {
         if (ids.length === 0) return Effect.succeed([])
