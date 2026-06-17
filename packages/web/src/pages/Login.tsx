@@ -71,8 +71,9 @@ export function LoginPage() {
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
           <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-slate-700">Email</label>
+              <label htmlFor="login-email" className="text-sm font-medium text-slate-700">Email</label>
               <input
+                id="login-email"
                 type="email"
                 placeholder="you@example.com"
                 value={email}
@@ -84,8 +85,9 @@ export function LoginPage() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-slate-700">Password</label>
+              <label htmlFor="login-password" className="text-sm font-medium text-slate-700">Password</label>
               <input
+                id="login-password"
                 type="password"
                 placeholder="••••••••"
                 value={password}

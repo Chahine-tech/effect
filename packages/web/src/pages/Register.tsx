@@ -82,8 +82,9 @@ export function RegisterPage() {
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
           <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-slate-700">Name</label>
+              <label htmlFor="register-name" className="text-sm font-medium text-slate-700">Name</label>
               <input
+                id="register-name"
                 type="text"
                 placeholder="Alice"
                 value={name}
@@ -94,8 +95,9 @@ export function RegisterPage() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-slate-700">Email</label>
+              <label htmlFor="register-email" className="text-sm font-medium text-slate-700">Email</label>
               <input
+                id="register-email"
                 type="email"
                 placeholder="you@example.com"
                 value={email}
@@ -106,8 +108,9 @@ export function RegisterPage() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-slate-700">Password</label>
+              <label htmlFor="register-password" className="text-sm font-medium text-slate-700">Password</label>
               <input
+                id="register-password"
                 type="password"
                 placeholder="Min. 8 characters"
                 value={password}
@@ -118,8 +121,9 @@ export function RegisterPage() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-slate-700">Confirm password</label>
+              <label htmlFor="register-confirm-password" className="text-sm font-medium text-slate-700">Confirm password</label>
               <input
+                id="register-confirm-password"
                 type="password"
                 placeholder="Repeat your password"
                 value={confirmPassword}

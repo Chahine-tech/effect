@@ -115,6 +115,7 @@ export function UsersPage() {
                     </div>
                     <div className="flex gap-1.5 shrink-0">
                       <button
+                        type="button"
                         onClick={() => update.mutate({ id: user.id, name: editName, email: editEmail })}
                         disabled={update.isPending}
                         className="text-xs bg-slate-900 text-white px-3 py-1 rounded-md hover:bg-slate-700 disabled:opacity-50 transition-colors"
@@ -122,6 +123,7 @@ export function UsersPage() {
                         {update.isPending ? "Saving…" : "Save"}
                       </button>
                       <button
+                        type="button"
                         onClick={cancelEdit}
                         className="text-xs text-slate-500 hover:text-slate-700 px-2 py-1 rounded-md transition-colors"
                       >
@@ -140,12 +142,14 @@ export function UsersPage() {
                     </div>
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
                       <button
+                        type="button"
                         onClick={() => startEdit(user)}
                         className="text-xs text-slate-500 hover:text-slate-700 hover:bg-slate-100 px-2 py-1 rounded-md transition-colors"
                       >
                         Edit
                       </button>
                       <button
+                        type="button"
                         onClick={() => remove.mutate(user.id)}
                         disabled={isRemoving}
                         className="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded-md disabled:opacity-40 transition-colors"
@@ -164,6 +168,7 @@ export function UsersPage() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-6">
           <button
+            type="button"
             onClick={() => navigate({ search: { page: page - 1 } })}
             disabled={page <= 1}
             className="text-sm px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
@@ -174,6 +179,7 @@ export function UsersPage() {
             Page {page} of {totalPages}
           </span>
           <button
+            type="button"
             onClick={() => navigate({ search: { page: page + 1 } })}
             disabled={page >= totalPages}
             className="text-sm px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"

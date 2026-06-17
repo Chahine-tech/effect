@@ -51,6 +51,7 @@ export function Root() {
               </Link>
             ) : (
               <button
+                type="button"
                 onClick={() => logout.mutate()}
                 disabled={logout.isPending}
                 className="px-3 py-1.5 text-sm text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-40"

@@ -31,6 +31,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <p className="mt-1 text-sm text-slate-500 max-w-sm">{this.state.error.message}</p>
           </div>
           <button
+            type="button"
             onClick={() => this.setState({ error: null })}
             className="text-sm px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-700 transition-colors"
           >
